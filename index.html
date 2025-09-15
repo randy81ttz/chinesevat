@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>월간회계 커피챗 - 중국 증치세 (최종본-국문)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap');
+        body {
+            font-family: 'Noto Sans KR', sans-serif;
+            background-color: #f3f4f6;
+        }
+        .app-container {
+            width: 100%;
+            max-width: 420px;
+            height: 85vh;
+            max-height: 800px;
+            background-color: #A8C5D4;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        .main-screen {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100%;
+            text-align: center;
+            color: #4A3728;
+            background: linear-gradient(135deg, #FFFDE7, #FFF8E1);
+            padding: 2rem;
+        }
+        .chat-header {
+            background-color: #92B3C3;
+            color: #3C474D;
+            flex-shrink: 0;
+        }
+        .chat-body {
+            scroll-behavior: smooth;
+        }
+        .chat-bubble {
+            max-width: 100%;
+            word-wrap: break-word;
+        }
+        .chat-bubble.me {
+            background-color: #FEE500; /* 카카오톡 노란색 */
+            color: #3C1E1E;
+        }
+        .chat-bubble.you {
+            background-color: #FFFFFF;
+        }
+        .timestamp {
+            font-size: 0.7rem;
+            color: #6b7280;
+            flex-shrink: 0;
+        }
+        .chat-date-separator {
+            font-size: 0.75rem;
+            color: #ffffff;
+            background-color: #83A2B1;
+        }
+        .message-group {
+            opacity: 0;
+            transform: translateY(20px);
+            transition: opacity 0.5s ease-out, transform 0.5s ease-out;
+            max-width: 85%;
+        }
+        .message-group.me {
+            margin-left: auto;
+        }
+        .message-group.you {
+            margin-right: auto;
+        }
+        .message-group.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        .controls {
+            flex-shrink: 0;
+        }
+    </style>
+</head>
+<body class="flex items-center justify-center min-h-screen p-4">
+
+<div class="app-container rounded-lg shadow-lg border">
+    <!-- Main Screen -->
+    <div id="main-screen" class="main-screen">
+        <div class="flex-grow flex flex-col justify-center items-center">
+            <h1 class="text-xl font-bold text-gray-600">월간회계</h1>
+            <h2 class="text-2xl font-bold mt-4 text-gray-800">중국증치세가 뭔가요?</h2>
+        </div>
+        <button id="start-btn" class="w-full bg-yellow-400 hover:bg-yellow-500 text-gray-800 font-bold py-3 px-4 rounded-lg transition duration-300 mt-8 shadow-md">
+            시작하기
+        </button>
+    </div>
+
+    <!-- Chat Container (Initially Hidden) -->
+    <div id="chat-container" class="flex flex-col h-full" style="display: none;">
+        <!-- Chat Header -->
+        <div class="chat-header p-3 flex items-center shadow-md">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+            </svg>
+            <h1 class="text-lg font-bold">권팀장님 (재무회계)</h1>
+        </div>
+
+        <!-- Chat Body -->
+        <div id="chat-body" class="flex-1 p-4 overflow-y-auto space-y-4 bg-[#A8C5D4]">
+            <!-- Date Separator -->
+            <div class="text-center my-2">
+                <span id="chat-date" class="chat-date-separator text-white px-3 py-1 rounded-full"></span>
+            </div>
+            <!-- Conversation Messages will be injected here by JS -->
+        </div>
+
+        <!-- Controls -->
+        <div class="controls p-4 bg-white border-t">
+            <button id="next-btn" class="w-full bg-yellow-400 hover:bg-yellow-500 text-black font-bold py-3 px-4 rounded-lg transition duration-300">
+                다음 대화 보기
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+const mainScreen = document.getElementById('main-screen');
+const startButton = document.getElementById('start-btn');
+const chatContainer = document.getElementById('chat-container');
+const chatBody = document.getElementById('chat-body');
+const nextButton = document.getElementById('next-btn');
+const chatDate = document.getElementById('chat-date');
+
+const today = new Date();
+const year = today.getFullYear();
+const month = today.getMonth() + 1;
+const day = today.getDate();
+const week = ['일', '월', '화', '수', '목', '금', '토'];
+const dayOfWeek = week[today.getDay()];
+chatDate.textContent = `${year}년 ${month}월 ${day}일 ${dayOfWeek}요일`;
+
+const messages = [
+    { from: 'me', name: '한두희대리', time: '오후 2:00', text: "팀장님, 안녕하세요! 중국 거래 건 때문에 '증치세'가 계속 나오는데, 이게 도대체 뭔가요? 너무 헷갈려요." },
+    { from: 'you', name: '권팀장님', time: '오후 2:01', text: "한대리님, 좋은 질문이에요! '증치세(增值税)'는 중국의 부가가치세(VAT)라고 생각하면 가장 쉬워요. 부가세의 대원칙은 '소비가 일어나는 곳에서 과세한다'는 <b>'소비지국 과세원칙'</b>이죠." },
+    { from: 'me', name: '한두희대리', time: '오후 2:02', text: "아하! 그럼 저희가 돈을 받아야 하는 '매출' 건(한국→중국 용역 제공)은, 수리용역은 한국에서 제공하였지만 해당 서비스 소비지가 중국이니까 중국이 과세하는 게 맞네요?" },
+    { from: 'you', name: '권팀장님', time: '오후 2:03', text: "정확해요. 중국 세법은 서비스의 혜택을 받는 '구매자'가 중국에 있으면, 소비가 중국에서 일어난 것으로 봐요. 그래서 중국 관계사가 우리에게 돈을 줄 때 증치세를 미리 떼고(원천징수) 주는 겁니다." },
+    { from: 'me', name: '한두희대리', time: '오후 2:04', text: "그럼 반대로 저희가 돈을 줘야 하는 '매입' 건(중국→한국 용역 제공)은요? 수리용역은 중국에서 제공받았지만 해당 서비스를 소비하는 저희가 한국에 있으니 '소비지국 과세원칙'에 따라 한국에서 과세해야 하는 거 아닌가요? 그런데 왜 중국 파트너가 저희에게 증치세를 붙여서 청구하죠? 이건 원칙에 어긋나는 것 같아 억지처럼 느껴져요." },
+    { from: 'you', name: '권팀장님', time: '오후 2:05', text: "바로 그 부분이 핵심이고, 많은 분들이 가장 혼란스러워하는 지점이에요. 한대리님 지적처럼, 엄밀한 의미의 '소비지국 과세원칙'과는 충돌하는 것처럼 보이죠." },
+    { from: 'you', name: '권팀장님', time: '오후 2:06', text: "이걸 이해하려면, 중국 세법이 '용역이 국내(중국)에서 수행되었는가'를 기준으로 과세한다는 점을 알아야 해요. 즉, 중국 땅 안에서 수행된 용역은 구매자가 외국법인이든 관계없이 중국의 과세 대상이 되는 겁니다. 국제조세조정법에서도 유사한 개념을 사용하죠." },
+    { from: 'me', name: '한두희대리', time: '오후 2:07', text: "아! 그럼 저희 '매입' 건은 수리 용역이 중국 현지에서 일어났으니, 중국 입장에서는 그냥 '자국 내 거래'로 보는 거군요! 원칙이 다른 게 아니라, 어느 원칙을 우선 적용하느냐의 차이네요." },
+    { from: 'you', name: '권팀장님', time: '오후 2:08', text: "바로 그거예요! 현실적으로 중국이 자국 과세권을 극대화하는 방식이지만, 우리는 그 법을 따라야 하죠. 그럼 이제 두 상황에 맞춰서 어떤 증빙을 챙겨야 할지 볼까요?" },
+    { from: 'me', name: '한두희대리', time: '오후 2:09', text: "네! 어떤 서류들을 챙겨야 하나요?" },
+    { from: 'you', name: '권팀장님', time: '오후 2:10', text: "딱 두 가지만 기억하세요.<br><br><b>[매출 시]</b> 수리용역대금(인보이스 금액)에서 증치세가 원천징수되고 나머지가 입금돼요. 이때는 증빙으로 <b>'세수완납증명(完税凭证)'</b>을 받아야 하고요.<br><br><b>[매입 시]</b> 반대로 수리용역대금에 증치세가 추가된 금액으로 청구받게 돼요. 이때는 증빙으로 <b>'발표(发票, Fāpiào)'</b>를 받아야 해요." },
+    { from: 'me', name: '한두희대리', time: '오후 2:11', text: "팀장님, '발표'가 정확히 어떤 서류인가요? 그냥 인보이스랑 다른 건가요?" },
+    { from: 'you', name: '권팀장님', time: '오후 2:12', text: "좋은 질문이에요. '발표'는 중국 세무 당국이 통제하는 유일한 합법적 거래 증빙이에요. 우리나라의 '세금계산서'와 '현금영수증'을 합쳐놓은 개념이죠. 이게 있어야 우리가 지출한 비용을 정식으로 인정받을 수 있어요." },
+    { from: 'you', name: '권팀장님', time: '오후 2:13', text: "그리고 발표에는 '전용 발표'와 '보통 발표'가 있는데, '전용 발표'는 중국 내 사업자가 매입세액공제를 받을 때 쓰는 서류라 우리 같은 외국 기업에게는 무의미해요. 우리는 거래 사실을 증명하는 <b>'보통 발표'</b>를 받으면 충분하고 완벽합니다." },
+    { from: 'me', name: '한두희대리', time: '오후 2:14', text: "아, 발표가 세금계산서군요! 이제 알겠습니다. 그럼 세율은 보통 몇 %인가요? 저희 같은 수리 용역의 경우에요." },
+    { from: 'you', name: '권팀장님', time: '오후 2:15', text: "원칙적으로 저희가 제공하거나 제공받는 '수리 및 수선 용역(修理修配劳务)'의 증치세율은 일반적으로 <b>13%</b>가 적용됩니다. 그리고 과세 대상은 부품비, 기술료, 교통비 등 용역의 대가로 지급되는 '전체 금액'이 되는 것이 일반적이고요." },
+    { from: 'me', name: '한두희대리', time: '오후 2:16', text: "그럼 마지막으로 가장 중요한 질문이에요. 이렇게 중국에 낸 증치세, 한국에서 세금 혜택을 받을 수 있나요? 예를 들어 '외국납부세액공제' 같은 거요." },
+    { from: 'you', name: '권팀장님', time: '오후 2:17', text: "결론부터 말하면 <b>세액공제는 불가능합니다.</b> '외국납부세액공제'는 외국에 납부한 '소득세(법인세)'에만 적용되는 제도거든요. 증치세는 회사의 이익(소득)에 대한 세금이 아니라, 거래 자체에 붙는 '거래세(부가가치세)'라서 성격이 완전히 다릅니다." },
+    { from: 'me', name: '한두희대리', time: '오후 2:18', text: "아... 소득세가 아니라서 안 되는 거군요. 그럼 그 돈은 그냥 손해 보는 건가요?" },
+    { from: 'you', name: '권팀장님', time: '오후 2:19', text: "손해는 아니에요. 우리 회사의 정당한 '비용(손금)'으로 처리할 수 있어요. 매출이든 매입이든 중국에 낸 증치세는 전액 비용으로 인정되니, 최종적으로 내야 할 법인세가 아주 약간은 줄어드는 효과가 있죠." },
+    { from: 'me', name: '한두희대리', time: '오후 2:20', text: "와, 팀장님! 이제 정말 완벽하게 정리됐어요.<br><br><b>[상황 1: 우리가 수리용역을 제공할 때 (매출)]</b><br>👉 원칙: 소비지국 과세 (구매자 기준)<br>👉 처리: 증치세 원천징수 후 입금<br>👉 증빙: '세수완납증명'<br><br><b>[상황 2: 우리가 수리용역을 제공받을 때 (매입)]</b><br>👉 원칙: 용역 수행지 기준 과세<br>👉 처리: 증치세 포함하여 청구<br>👉 증빙: '발표(보통 발표)'<br><br>그리고 세율은 <b>전체 금액에 13%</b>가 일반적이고, 두 경우 모두 <b>세액공제는 X, 비용처리는 O</b>!" },
+    { from: 'you', name: '권팀장님', time: '오후 2:21', text: "훌륭해요, 한대리님! 그것만 명확히 구분하면 앞으로 중국 거래에서 헷갈릴 일 없을 거예요. 고생하셨어요!" }
+];
+
+let currentMessageIndex = 0;
+
+function showNextMessage() {
+    if (currentMessageIndex >= messages.length) {
+        return;
+    }
+
+    const msg = messages[currentMessageIndex];
+    const messageGroup = document.createElement('div');
+
+    if (msg.from === 'me') {
+        messageGroup.className = 'message-group me';
+        messageGroup.innerHTML = `
+            <div class="flex flex-col items-end">
+                <p class="text-xs font-medium text-gray-800 mr-1 mb-1">${msg.name}</p>
+                <div class="flex items-end justify-end">
+                    <span class="timestamp mr-2">${msg.time}</span>
+                    <div class="chat-bubble me p-3 rounded-lg">
+                        <p class="text-sm"></p>
+                    </div>
+                </div>
+            </div>
+        `;
+    } else {
+        messageGroup.className = 'message-group you';
+        messageGroup.innerHTML = `
+            <div class="flex flex-col items-start">
+                <p class="text-xs font-medium text-gray-800 ml-1 mb-1">${msg.name}</p>
+                <div class="flex items-end">
+                    <div class="chat-bubble you p-3 rounded-lg shadow">
+                        <p class="text-sm"></p>
+                    </div>
+                    <span class="timestamp ml-2">${msg.time}</span>
+                </div>
+            </div>
+        `;
+    }
+
+    chatBody.appendChild(messageGroup);
+    
+    // Process innerHTML for proper rendering of HTML tags like <br> and <b>
+    const textElement = messageGroup.querySelector('.text-sm');
+    textElement.innerHTML = msg.text;
+
+    setTimeout(() => {
+        messageGroup.classList.add('visible');
+        chatBody.scrollTop = chatBody.scrollHeight;
+    }, 10);
+
+    currentMessageIndex++;
+
+    if (currentMessageIndex >= messages.length) {
+        nextButton.textContent = '모든 대화 보기 완료';
+        nextButton.disabled = true;
+        nextButton.classList.remove('hover:bg-yellow-500');
+        nextButton.classList.add('bg-gray-400', 'cursor-not-allowed');
+    }
+}
+
+startButton.addEventListener('click', () => {
+    mainScreen.style.display = 'none';
+    chatContainer.style.display = 'flex';
+    showNextMessage();
+});
+
+nextButton.addEventListener('click', showNextMessage);
+
+</script>
+</body>
+</html>
